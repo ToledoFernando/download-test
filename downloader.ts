@@ -30,8 +30,13 @@ export async function getMetadata(url: string): Promise<VideoMetadata> {
     console.log(`🔍 Consultando metadata para: ${url}...`);
     const start = Date.now();
     try {
-        // Usamos exec directamente para poder pasar --no-playlist
-        const metadataStr = await ytdlp.execPromise([url, '-j', '--no-playlist']);
+        // Usamos exec directamente para poder pasar --no-playlist y el runtime
+        const metadataStr = await ytdlp.execPromise([
+            url, 
+            '-j', 
+            '--no-playlist',
+            '--js-runtime', 'bun'
+        ]);
         const metadata = JSON.parse(metadataStr);
         
         const end = Date.now();

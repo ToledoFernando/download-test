@@ -377,7 +377,8 @@ app.get('/download', async (c) => {
     const stream = ytdlp.execStream([
         url,
         '-f', formatId,
-        '--no-playlist'
+        '--no-playlist',
+        '--js-runtime', 'bun'
     ]);
 
     return new Response(stream as any, {
