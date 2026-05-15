@@ -370,7 +370,9 @@ app.get('/download', async (c) => {
         title = info.title.replace(/[^\w\s-]/g, ''); // Limpiar nombre
         const formatInfo = info.formats.find(f => f.formatId === formatId);
         if (formatInfo) ext = formatInfo.extension;
-    } catch (e) {}
+    } catch (e) {
+        console.warn('⚠️ No se pudo obtener metadata para el nombre del archivo, usando valores por defecto.');
+    }
 
     const isWin = process.platform === 'win32';
     const ytdlp = new YTdlpWrap(path.join(process.cwd(), 'bin', isWin ? 'yt-dlp.exe' : 'yt-dlp'));

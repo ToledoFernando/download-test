@@ -20,8 +20,14 @@ async function setup() {
     console.log('⏳ Descargando yt-dlp binary (esto puede tardar un cachito)...');
     try {
         // El método downloadFromGithub baja el binario para la plataforma actual
-        // En Windows bajará el .exe
         await YTdlpWrap.downloadFromGithub(BIN_PATH);
+        
+        // IMPORTANTE: En Linux/Docker necesitamos darle permisos de ejecución
+        if (process.platform !== 'win32') {
+            fs.chmodSync(BIN_PATH, '755');
+            console.log('🔑 Permisos de ejecución otorgados a yt-dlp');
+        }
+        
         console.log('🚀 yt-dlp descargado con éxito en:', BIN_PATH);
     } catch (error) {
         console.error('❌ Error bajando yt-dlp:', error);
