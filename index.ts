@@ -401,7 +401,7 @@ app.get('/download', async (c) => {
     });
 });
 
-console.log('📡 Servidor API levantado en el puerto 7860');
+console.log('📡 Servidor API levantado en el puerto 8080');
 
 // Chequeo de salud de yt-dlp
 const isWinGlobal = process.platform === 'win32';
@@ -412,7 +412,7 @@ ytdlpCheck.execPromise(['--version'])
     .catch(e => console.error('❌ Error crítico: yt-dlp no responde:', e));
 
 export default {
-    port: 7860,
+    port: 8080,
     fetch: app.fetch,
     idleTimeout: 60,
 };

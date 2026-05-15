@@ -19,6 +19,6 @@ RUN bun install
 # El resto del código
 COPY . .
 
-EXPOSE 7860
+EXPOSE 8080
 
 CMD ["bun", "run", "index.ts"]
