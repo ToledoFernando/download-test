@@ -1,23 +1,23 @@
 FROM oven/bun:latest
 
-# Instalamos dependencias del sistema (python3 para yt-dlp, ffmpeg para audio/video)
+# Instalamos dependencias básicas
 RUN apt-get update && apt-get install -y \
     python3 \
+    python3-pip \
     ffmpeg \
-    curl \
     && rm -rf /var/lib/apt/lists/*
+
+# Instalamos yt-dlp usando pip (es la forma más robusta en Linux)
+RUN pip3 install --break-system-packages yt-dlp
 
 WORKDIR /app
 
-# Copiamos archivos de dependencias
+# Dependencias de Bun
 COPY package.json bun.lock ./
 RUN bun install
 
-# Copiamos el resto del código
+# El resto del código
 COPY . .
-
-# Corremos el setup para asegurar que el binario de yt-dlp esté
-RUN bun run setup.ts
 
 EXPOSE 7860
 

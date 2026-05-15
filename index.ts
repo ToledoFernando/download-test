@@ -373,15 +373,25 @@ app.get('/download', async (c) => {
     } catch (e) {
         console.warn('⚠️ No se pudo obtener metadata para el nombre del archivo, usando valores por defecto.');
     }
-
     const isWin = process.platform === 'win32';
-    const ytdlp = new YTdlpWrap(path.join(process.cwd(), 'bin', isWin ? 'yt-dlp.exe' : 'yt-dlp'));
-    const stream = ytdlp.execStream([
+    const BIN_PATH = isWin ? path.join(process.cwd(), 'bin', 'yt-dlp.exe') : 'yt-dlp';
+    const ytdlp = new YTdlpWrap(BIN_PATH);
+    const args = [
         url,
         '-f', formatId,
         '--no-playlist',
-        '--js-runtime', 'bun'
-    ]);
+        '--no-check-certificates',
+        '--no-warnings',
+        '--force-ipv4',
+        '--extractor-args', 'youtube:player_client=android,web'
+    ];
+
+    const cookiesPath = path.join(process.cwd(), 'cookies.txt');
+    if (require('fs').existsSync(cookiesPath)) {
+        args.push('--cookies', cookiesPath);
+    }
+
+    const stream = ytdlp.execStream(args);
 
     return new Response(stream as any, {
         headers: {
@@ -392,8 +402,17 @@ app.get('/download', async (c) => {
 });
 
 console.log('📡 Servidor API levantado en el puerto 7860');
+
+// Chequeo de salud de yt-dlp
+const isWinGlobal = process.platform === 'win32';
+const BIN_PATH_GLOBAL = isWinGlobal ? path.join(process.cwd(), 'bin', 'yt-dlp.exe') : 'yt-dlp';
+const ytdlpCheck = new YTdlpWrap(BIN_PATH_GLOBAL);
+ytdlpCheck.execPromise(['--version'])
+    .then(v => console.log(`🎬 yt-dlp funcionando (Versión: ${v.trim()})`))
+    .catch(e => console.error('❌ Error crítico: yt-dlp no responde:', e));
+
 export default {
     port: 7860,
     fetch: app.fetch,
-    idleTimeout: 60, // Aumentamos a 60 segundos por las dudas
+    idleTimeout: 60,
 };

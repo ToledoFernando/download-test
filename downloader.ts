@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 
 const isWin = process.platform === 'win32';
-const BIN_PATH = path.join(process.cwd(), 'bin', isWin ? 'yt-dlp.exe' : 'yt-dlp');
+const BIN_PATH = isWin ? path.join(process.cwd(), 'bin', 'yt-dlp.exe') : 'yt-dlp';
 const ytdlp = new YTdlpWrap(BIN_PATH);
 
 export interface VideoFormat {
@@ -30,13 +30,33 @@ export async function getMetadata(url: string): Promise<VideoMetadata> {
     console.log(`🔍 Consultando metadata para: ${url}...`);
     const start = Date.now();
     try {
-        // Usamos exec directamente para poder pasar --no-playlist y el runtime
-        const metadataStr = await ytdlp.execPromise([
+        // Creamos una promesa que falla a los 30 segundos si yt-dlp se cuelga
+        const timeout = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Tiempo de espera agotado (yt-dlp colgado)')), 35000)
+        );
+
+        const args = [
             url, 
             '-j', 
             '--no-playlist',
-            '--js-runtime', 'bun'
-        ]);
+            '--no-check-certificates',
+            '--no-warnings',
+            '--prefer-free-formats',
+            '--youtube-skip-dash-manifest',
+            '--force-ipv4',
+            '--extractor-args', 'youtube:player_client=android,web'
+        ];
+
+        // Si existen cookies, las usamos para evitar bloqueos
+        const cookiesPath = path.join(process.cwd(), 'cookies.txt');
+        if (fs.existsSync(cookiesPath)) {
+            args.push('--cookies', cookiesPath);
+            console.log('🍪 Usando cookies.txt para la consulta');
+        }
+
+        const metadataPromise = ytdlp.execPromise(args);
+
+        const metadataStr = await Promise.race([metadataPromise, timeout]) as string;
         const metadata = JSON.parse(metadataStr);
         
         const end = Date.now();
